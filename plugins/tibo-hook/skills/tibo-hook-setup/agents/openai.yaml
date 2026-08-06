@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tibo Hook Setup"
+  short_description: "Configure, preview, test, and inspect tibo-hook safely"
+  default_prompt: "Use $tibo-hook-setup to configure tibo-hook and preview a request email."

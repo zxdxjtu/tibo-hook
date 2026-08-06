@@ -1,0 +1,3 @@
+{"type":"session_meta","payload":{"id":"session-4","cli_version":"0.144.3","source":"cli","originator":"codex-tui"}}
+{"timestamp":"2026-08-06T10:00:00Z","type":"response_item","payload":{"type":"function_call_output","output":"tool returned 429"}}
+{"timestamp":"2026-08-06T10:00:01Z","type":"event_msg","payload":{"type":"turn_complete"}}

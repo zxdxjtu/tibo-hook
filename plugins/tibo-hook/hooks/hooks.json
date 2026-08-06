@@ -1,0 +1,8 @@
+{
+  "description": "Watch verified Codex usage-limit events without changing the model turn.",
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "node \"${PLUGIN_ROOT}/dist/tibo-hook.cjs\" hook SessionStart", "commandWindows": "node \"%PLUGIN_ROOT%\\dist\\tibo-hook.cjs\" hook SessionStart", "timeout": 5}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "node \"${PLUGIN_ROOT}/dist/tibo-hook.cjs\" hook UserPromptSubmit", "commandWindows": "node \"%PLUGIN_ROOT%\\dist\\tibo-hook.cjs\" hook UserPromptSubmit", "timeout": 5}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "node \"${PLUGIN_ROOT}/dist/tibo-hook.cjs\" hook Stop", "commandWindows": "node \"%PLUGIN_ROOT%\\dist\\tibo-hook.cjs\" hook Stop", "timeout": 5}]}]
+  }
+}

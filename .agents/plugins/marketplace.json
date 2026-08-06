@@ -1,0 +1,20 @@
+{
+  "name": "tibo-hook",
+  "interface": {
+    "displayName": "Tibo Hook"
+  },
+  "plugins": [
+    {
+      "name": "tibo-hook",
+      "source": {
+        "source": "local",
+        "path": "./plugins/tibo-hook"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "DeveloperTools"
+    }
+  ]
+}

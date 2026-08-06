@@ -1,0 +1,14 @@
+node_modules/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.npmrc
+*.eml
+*.pem
+*.p12
+*.key
+outbox/
+plugins/tibo-hook/data/

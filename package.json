@@ -1,0 +1,30 @@
+{
+  "name": "@zxdxjtu/tibo-hook",
+  "version": "0.1.0",
+  "description": "Experimental privacy-minimized Codex usage-limit hook",
+  "license": "MIT",
+  "repository": "github:zxdxjtu/tibo-hook",
+  "homepage": "https://github.com/zxdxjtu/tibo-hook#readme",
+  "bugs": {"url": "https://github.com/zxdxjtu/tibo-hook/issues"},
+  "keywords": ["codex", "plugin", "hook", "usage-limit", "email"],
+  "publishConfig": {"access": "public"},
+  "type": "module",
+  "engines": {"node": ">=20"},
+  "bin": {"tibo-hook": "plugins/tibo-hook/dist/tibo-hook.cjs"},
+  "files": ["plugins/tibo-hook/dist/tibo-hook.cjs", "plugins/tibo-hook/templates/request.txt", "plugins/tibo-hook/compatibility.json", "plugins/tibo-hook/THIRD_PARTY_NOTICES.md", "LICENSE", "README.md", "PRIVACY.md", "SECURITY.md", "SPEC.md", "DESIGN.md", "THIRD_PARTY_NOTICES.md"],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "tsc --noEmit",
+    "test": "npm run build && node --import tsx --test tests/*.test.ts",
+    "test:fixtures": "node --import tsx --test tests/detector.test.ts",
+    "verify": "npm run check && npm test && npm audit --audit-level=high && npm pack --dry-run"
+  },
+  "dependencies": {"nodemailer": "^9.0.4"},
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "@types/nodemailer": "^6.4.17",
+    "esbuild": "^0.25.4",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
