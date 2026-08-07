@@ -15,7 +15,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "tsc --noEmit",
-    "test": "npm run build && node --import tsx --test tests/*.test.ts",
+    "test": "npm run build && node scripts/run-tests.mjs",
     "test:fixtures": "node --import tsx --test tests/detector.test.ts",
     "verify": "npm run check && npm test && npm audit --audit-level=high && npm pack --dry-run"
   },
