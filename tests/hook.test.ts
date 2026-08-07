@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { setDebugNext } from "../src/config.js";
+import { ipcRequest } from "../src/ipc.js";
 import { pluginRoot, tempData } from "./helpers.js";
 
 async function waitFor(predicate: () => boolean, timeoutMs = 3000): Promise<void> {
@@ -37,6 +38,9 @@ test("bundled UserPromptSubmit consumes debug once without a transcript or SMTP"
   assert.doesNotMatch(log, /PRIVATE PROMPT|developer@example|reviewer@example|transcript/i);
   const metadata = JSON.parse(readFileSync(join(root, "state", "supervisor.lock", "metadata.json"), "utf8")) as { pid: number };
   assert.ok(Number.isInteger(metadata.pid) && metadata.pid > 1);
-  process.kill(metadata.pid, "SIGTERM");
+  const key = readFileSync(join(root, "state", "ipc.key"));
+  const shutdown = await ipcRequest(root, key, { action: "shutdown" }) as { ok: boolean; result: { shuttingDown: boolean } };
+  assert.equal(shutdown.ok, true);
+  assert.equal(shutdown.result.shuttingDown, true);
   await waitFor(() => !existsSync(join(root, "state", "supervisor.lock")));
 });

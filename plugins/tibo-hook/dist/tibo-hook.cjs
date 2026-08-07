@@ -13123,6 +13123,10 @@ async function runSupervisor(root, pluginRoot2) {
   const lock = (0, import_node_path9.join)(root, "state", "supervisor.lock");
   if (!acquireLock(lock)) return;
   let server;
+  let requestShutdown;
+  const shutdownRequested = new Promise((resolve4) => {
+    requestShutdown = resolve4;
+  });
   const watchers = /* @__PURE__ */ new Map();
   try {
     const key = (0, import_node_fs11.readFileSync)((0, import_node_path9.join)(root, "state", "ipc.key"));
@@ -13140,6 +13144,10 @@ async function runSupervisor(root, pluginRoot2) {
       const body = unknownBody;
       if (!body || typeof body !== "object" || typeof body.action !== "string") throw new Error("ipc_message_invalid");
       if (body.action === "health") return { pid: process.pid, version: VERSION };
+      if (body.action === "shutdown") {
+        requestShutdown();
+        return { shuttingDown: true };
+      }
       if (body.action === "debug-probe") {
         if (!body.sessionId || !body.turnId || !body.model) throw new Error("debug_probe_invalid");
         if (!consumeDebugNext(root)) return { debug: false };
@@ -13161,36 +13169,35 @@ async function runSupervisor(root, pluginRoot2) {
       watchers.set(watcherKey(registration.sessionId, registration.turnId), { watcher: new TranscriptWatcher(registration), expiresAt: Date.now() + 6 * 36e5 });
       return { registered: true };
     });
-    await new Promise((resolve4) => {
-      const timer = setInterval(() => {
-        const now = Date.now();
-        for (const [key2, active] of watchers) {
-          if (active.expiresAt <= now) {
-            watchers.delete(key2);
-            diagnostic(root, "watcher_expired");
-            continue;
-          }
-          try {
-            const outcome = active.watcher.poll(now);
-            if (outcome.kind === "continue") continue;
-            watchers.delete(key2);
-            if (outcome.kind === "detected") void engine.handle(outcome.event).catch((error) => diagnostic(root, errorCategory("delivery_failed", error)));
-            else diagnostic(root, outcome.category);
-          } catch (error) {
-            watchers.delete(key2);
-            diagnostic(root, errorCategory("watcher_failed", error));
-          }
+    const timer = setInterval(() => {
+      const now = Date.now();
+      for (const [key2, active] of watchers) {
+        if (active.expiresAt <= now) {
+          watchers.delete(key2);
+          diagnostic(root, "watcher_expired");
+          continue;
         }
-      }, 500);
-      timer.unref();
-      const shutdown = () => {
-        clearInterval(timer);
-        clearInterval(heartbeat);
-        resolve4();
-      };
-      process.once("SIGTERM", shutdown);
-      process.once("SIGINT", shutdown);
-    });
+        try {
+          const outcome = active.watcher.poll(now);
+          if (outcome.kind === "continue") continue;
+          watchers.delete(key2);
+          if (outcome.kind === "detected") void engine.handle(outcome.event).catch((error) => diagnostic(root, errorCategory("delivery_failed", error)));
+          else diagnostic(root, outcome.category);
+        } catch (error) {
+          watchers.delete(key2);
+          diagnostic(root, errorCategory("watcher_failed", error));
+        }
+      }
+    }, 500);
+    timer.unref();
+    const shutdown = () => requestShutdown();
+    process.once("SIGTERM", shutdown);
+    process.once("SIGINT", shutdown);
+    await shutdownRequested;
+    clearInterval(timer);
+    clearInterval(heartbeat);
+    process.off("SIGTERM", shutdown);
+    process.off("SIGINT", shutdown);
   } catch (error) {
     diagnostic(root, errorCategory("supervisor_failed", error));
   } finally {

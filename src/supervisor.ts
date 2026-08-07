@@ -12,6 +12,7 @@ import { VERSION } from "./constants.js";
 
 type SupervisorMessage =
   | { action: "health" }
+  | { action: "shutdown" }
   | { action: "debug-probe"; sessionId: string; turnId: string; model: string }
   | { action: "register"; registration: TurnRegistration }
   | { action: "stop"; sessionId: string; turnId: string };
@@ -58,6 +59,8 @@ export async function runSupervisor(root: string, pluginRoot: string): Promise<v
   const lock = join(root, "state", "supervisor.lock");
   if (!acquireLock(lock)) return;
   let server: Awaited<ReturnType<typeof createIpcServer>> | undefined;
+  let requestShutdown!: () => void;
+  const shutdownRequested = new Promise<void>(resolve => { requestShutdown = resolve; });
   const watchers = new Map<string, { watcher: TranscriptWatcher; expiresAt: number }>();
   try {
     const key = readFileSync(join(root, "state", "ipc.key"));
@@ -72,6 +75,10 @@ export async function runSupervisor(root: string, pluginRoot: string): Promise<v
       const body = unknownBody as SupervisorMessage;
       if (!body || typeof body !== "object" || typeof body.action !== "string") throw new Error("ipc_message_invalid");
       if (body.action === "health") return { pid: process.pid, version: VERSION };
+      if (body.action === "shutdown") {
+        requestShutdown();
+        return { shuttingDown: true };
+      }
       if (body.action === "debug-probe") {
         if (!body.sessionId || !body.turnId || !body.model) throw new Error("debug_probe_invalid");
         if (!consumeDebugNext(root)) return { debug: false };
@@ -90,25 +97,28 @@ export async function runSupervisor(root: string, pluginRoot: string): Promise<v
       watchers.set(watcherKey(registration.sessionId, registration.turnId), { watcher: new TranscriptWatcher(registration), expiresAt: Date.now() + 6 * 3600_000 });
       return { registered: true };
     });
-    await new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        const now = Date.now();
-        for (const [key, active] of watchers) {
-          if (active.expiresAt <= now) { watchers.delete(key); diagnostic(root, "watcher_expired"); continue; }
-          try {
-            const outcome = active.watcher.poll(now);
-            if (outcome.kind === "continue") continue;
-            watchers.delete(key);
-            if (outcome.kind === "detected") void engine.handle(outcome.event).catch(error => diagnostic(root, errorCategory("delivery_failed", error)));
-            else diagnostic(root, outcome.category);
-          } catch (error) { watchers.delete(key); diagnostic(root, errorCategory("watcher_failed", error)); }
-        }
-      }, 500);
-      timer.unref();
-      const shutdown = () => { clearInterval(timer); clearInterval(heartbeat); resolve(); };
-      process.once("SIGTERM", shutdown);
-      process.once("SIGINT", shutdown);
-    });
+    const timer = setInterval(() => {
+      const now = Date.now();
+      for (const [key, active] of watchers) {
+        if (active.expiresAt <= now) { watchers.delete(key); diagnostic(root, "watcher_expired"); continue; }
+        try {
+          const outcome = active.watcher.poll(now);
+          if (outcome.kind === "continue") continue;
+          watchers.delete(key);
+          if (outcome.kind === "detected") void engine.handle(outcome.event).catch(error => diagnostic(root, errorCategory("delivery_failed", error)));
+          else diagnostic(root, outcome.category);
+        } catch (error) { watchers.delete(key); diagnostic(root, errorCategory("watcher_failed", error)); }
+      }
+    }, 500);
+    timer.unref();
+    const shutdown = () => requestShutdown();
+    process.once("SIGTERM", shutdown);
+    process.once("SIGINT", shutdown);
+    await shutdownRequested;
+    clearInterval(timer);
+    clearInterval(heartbeat);
+    process.off("SIGTERM", shutdown);
+    process.off("SIGINT", shutdown);
   } catch (error) { diagnostic(root, errorCategory("supervisor_failed", error)); }
   finally {
     await new Promise<void>(resolve => server ? server.close(() => resolve()) : resolve());
