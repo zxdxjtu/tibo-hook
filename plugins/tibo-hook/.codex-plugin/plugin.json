@@ -1,0 +1,30 @@
+{
+  "name": "tibo-hook",
+  "version": "0.1.0",
+  "description": "Drafts or sends a privacy-minimized Codex capacity review request after a verified usage-limit event.",
+  "author": {
+    "name": "zxdxjtu",
+    "url": "https://github.com/zxdxjtu"
+  },
+  "homepage": "https://github.com/zxdxjtu/tibo-hook",
+  "repository": "https://github.com/zxdxjtu/tibo-hook",
+  "license": "MIT",
+  "keywords": ["codex", "hooks", "usage-limit", "email"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Tibo Hook",
+    "shortDescription": "Prepare a capacity review request after a verified limit.",
+    "longDescription": "Experimental local Codex hook that detects a structured usage-limit event, applies strict deduplication and privacy rules, then creates an .eml draft by default or sends it through user-configured SMTP.",
+    "developerName": "zxdxjtu",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://github.com/zxdxjtu/tibo-hook",
+    "privacyPolicyURL": "https://github.com/zxdxjtu/tibo-hook/blob/main/PRIVACY.md",
+    "defaultPrompt": [
+      "Configure tibo-hook and preview the request email.",
+      "Validate my tibo-hook setup without sending email.",
+      "Show the latest privacy-safe tibo-hook delivery status."
+    ],
+    "brandColor": "#10A37F"
+  }
+}

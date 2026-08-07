@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "transcriptDetector": {
+    "0.144.3": {
+      "fixtureSchema": "rollout-v1",
+      "surfaces": ["codex-app", "codex-cli"],
+      "autoSend": true
+    }
+  }
+}
