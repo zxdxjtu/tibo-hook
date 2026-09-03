@@ -19,7 +19,7 @@
     "test:fixtures": "node --import tsx --test tests/detector.test.ts",
     "verify": "npm run check && npm test && npm audit --audit-level=high && npm pack --dry-run"
   },
-  "dependencies": {"nodemailer": "^9.0.4"},
+  "dependencies": {"nodemailer": "^9.1.0"},
   "devDependencies": {
     "@types/node": "^20.17.30",
     "@types/nodemailer": "^6.4.17",
